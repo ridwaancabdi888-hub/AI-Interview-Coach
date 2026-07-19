@@ -36,6 +36,15 @@ Production: https://ai-interview-coach-sigma-bay.vercel.app
 6. Add `OPENAI_API_KEY` only as a server environment variable.
 7. Run `npm run dev` and open `http://localhost:3000`.
 
+## Available scripts
+
+- `npm run dev` — start the local development server with Turbopack.
+- `npm run build` — create an optimized production build.
+- `npm run start` — serve the production build locally after running `npm run build`.
+- `npm run lint` — run ESLint across the project.
+- `npm run type-check` — check TypeScript types without emitting files.
+- `npm test` — run the Node.js test suite.
+
 ## Environment variables
 
 - `NEXT_PUBLIC_SUPABASE_URL`
