@@ -1,0 +1,6 @@
+import { DashboardShell } from '@/components/layout/dashboard-shell';
+import { saveProfile } from '@/lib/auth/actions';
+
+export default function ProfilePage() {
+  return <DashboardShell><div className="max-w-3xl"><span className="badge">Profile</span><h1 className="mt-4 text-3xl font-extrabold">Career profile</h1><p className="mt-2 text-slate-600">Keep your goals current so practice stays relevant.</p><form action={saveProfile} className="card mt-7 grid gap-5 p-6 md:grid-cols-2"><label className="text-sm font-semibold">Full name<input name="fullName" required className="input mt-2" /></label><label className="text-sm font-semibold">Target role<input name="targetRole" required className="input mt-2" /></label><label className="text-sm font-semibold">Experience<select name="experienceLevel" className="input mt-2"><option value="student">Student</option><option value="entry">Entry</option><option value="mid">Mid</option><option value="senior">Senior</option></select></label><label className="text-sm font-semibold md:col-span-2">Career goal<textarea name="careerGoal" className="input mt-2 min-h-28" /></label><button className="btn btn-primary md:col-span-2">Save profile</button></form></div></DashboardShell>;
+}

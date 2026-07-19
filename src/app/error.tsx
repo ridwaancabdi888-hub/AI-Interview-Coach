@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <main className="grid min-h-screen place-items-center p-6"><div className="card max-w-lg p-8 text-center"><span className="text-4xl">⚠️</span><h1 className="mt-4 text-2xl font-extrabold">Something went wrong</h1><p className="mt-2 text-slate-600">The page could not be completed. Your account data remains safe.</p><button onClick={reset} className="btn btn-primary mt-6">Try again</button></div></main>; }
