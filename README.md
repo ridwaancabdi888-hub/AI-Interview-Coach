@@ -2,13 +2,17 @@
 
 A production-oriented interview practice platform for students and job seekers. It supports written and voice practice, role-specific AI questions, per-answer coaching, final performance reports, analytics, profiles, and administration foundations.
 
+## Live application
+
+Production: https://ai-interview-coach-sigma-bay.vercel.app
+
 ## Technology
 
 - Next.js 15 App Router and React 19
 - TypeScript and Tailwind CSS 4
 - Supabase Authentication and PostgreSQL
 - Server-side OpenAI REST integration
-- Vercel-ready deployment
+- Vercel deployment
 
 ## Features
 
@@ -32,6 +36,14 @@ A production-oriented interview practice platform for students and job seekers. 
 6. Add `OPENAI_API_KEY` only as a server environment variable.
 7. Run `npm run dev` and open `http://localhost:3000`.
 
+## Environment variables
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+
 ## Validation
 
 ```bash
@@ -47,4 +59,4 @@ Secrets are never committed. OpenAI calls execute only in Route Handlers. Supaba
 
 ## Deployment
 
-Import the GitHub repository into Vercel, configure the environment variables from `.env.example`, then deploy. Set `NEXT_PUBLIC_SITE_URL` to the production URL and add the same callback URL in Supabase Authentication settings.
+The production application is deployed on Vercel from the `main` branch. `NEXT_PUBLIC_SITE_URL` must match the production URL, and Supabase Authentication must include `https://ai-interview-coach-sigma-bay.vercel.app/auth/callback` as an allowed redirect URL.
