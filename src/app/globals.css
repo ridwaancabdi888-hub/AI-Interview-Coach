@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8fc;
+  --foreground: #111827;
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --border: #e5e7eb;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+.container { width: min(1180px, calc(100% - 32px)); margin-inline: auto; }
+.card { background: white; border: 1px solid var(--border); border-radius: 20px; }
+.shadow-soft { box-shadow: 0 20px 60px rgba(37, 43, 74, .08); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; padding: 12px 18px; font-weight: 700; transition: .2s; border: 1px solid transparent; cursor: pointer; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-secondary { background: white; border-color: #d7dbea; color: #222; }
+.input { width: 100%; border: 1px solid #d9dce7; border-radius: 12px; padding: 13px 14px; background: white; outline: none; }
+.input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, .12); }
+.badge { display: inline-flex; padding: 7px 10px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 13px; font-weight: 700; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+@media (max-width: 768px) { .container { width: min(100% - 24px, 1180px); } .desktop-only { display: none !important; } }
