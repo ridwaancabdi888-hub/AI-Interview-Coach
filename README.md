@@ -69,3 +69,22 @@ Secrets are never committed. OpenAI calls execute only in Route Handlers. Supaba
 ## Deployment
 
 The production application is deployed on Vercel from the `main` branch. `NEXT_PUBLIC_SITE_URL` must match the production URL, and Supabase Authentication must include `https://ai-interview-coach-sigma-bay.vercel.app/auth/callback` as an allowed redirect URL.
+
+## Search visibility setup
+
+Canonical website: `https://ai-interview-coach-sigma-bay.vercel.app/`
+
+- Sitemap: `https://ai-interview-coach-sigma-bay.vercel.app/sitemap.xml`
+- Robots file: `https://ai-interview-coach-sigma-bay.vercel.app/robots.txt`
+- Public organic landing page: `/`
+- Authentication, account, dashboard, interview, and API routes are excluded from search indexing.
+
+To connect Google Search Console:
+
+1. Add the canonical production URL as a URL-prefix property.
+2. Verify ownership. For HTML-tag verification, add Google's verification value to the root metadata in `src/app/layout.tsx`, deploy it, and then complete verification in Search Console.
+3. Submit `sitemap.xml` from the **Sitemaps** report.
+4. Inspect the homepage URL, run the live test, and use **Request Indexing** after the production deployment succeeds.
+5. Monitor Page Indexing and Core Web Vitals. Do not request indexing for authentication or private account routes.
+
+Search Console access and ownership verification are manual owner actions. Before broader public promotion, publish privacy and terms pages that accurately describe Supabase account data, AI processing, microphone/voice behavior, retention, and deletion procedures; these policies require verified business and legal details.
