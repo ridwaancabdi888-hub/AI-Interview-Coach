@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuestions } from '@/lib/ai/openai';
-import { rateLimit } from '@/lib/rate-limit/memory';
+import { enforceRateLimit } from '@/lib/rate-limit/distributed';
+import { createClient } from '@/lib/supabase/server';
 import type { InterviewConfig } from '@/lib/interviews/types';
 
 const fallbackQuestions: Record<InterviewConfig['type'], string[]> = {
@@ -28,9 +29,20 @@ const fallbackQuestions: Record<InterviewConfig['type'], string[]> = {
 };
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'local';
-  const limit = rateLimit(`start:${ip}`, 8, 60_000);
-  if (!limit.allowed) return NextResponse.json({ error: 'Too many interview requests. Try again shortly.' }, { status: 429 });
+  const supabase = await createClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Authentication is temporarily unavailable.' }, { status: 503 });
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const limited = await enforceRateLimit(
+    supabase,
+    'interview:start',
+    'Too many interview requests. Try again shortly.',
+  );
+  if (limited) return limited;
 
   try {
     const config = await request.json() as InterviewConfig;
