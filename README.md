@@ -32,7 +32,7 @@ Production: https://ai-interview-coach-sigma-bay.vercel.app
 2. Run `npm install`.
 3. Copy `.env.example` to `.env.local`.
 4. Create a Supabase project and add its public URL and anon key.
-5. Run `supabase/migrations/001_initial_schema.sql` in Supabase SQL Editor.
+5. Apply every SQL migration in `supabase/migrations` in filename order using the Supabase SQL Editor.
 6. Add `OPENAI_API_KEY` only as a server environment variable.
 7. Run `npm run dev` and open `http://localhost:3000`.
 
@@ -64,7 +64,7 @@ npm run build
 
 ## Security
 
-Secrets are never committed. OpenAI calls execute only in Route Handlers. Supabase RLS restricts user-owned records. Authentication middleware protects private routes. API handlers validate payload size and apply basic in-memory request limits; production deployments should replace this with a distributed rate limiter such as Upstash Redis.
+Secrets are never committed. OpenAI calls execute only in Route Handlers. Supabase RLS restricts user-owned records. Authentication middleware protects private routes. Protected API handlers validate payload size and use a Postgres-backed distributed per-account rate limiter that fails closed if the limiter is unavailable.
 
 ## Deployment
 
