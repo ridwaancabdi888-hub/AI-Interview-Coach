@@ -30,7 +30,18 @@ Production: https://ai-interview-coach-sigma-bay.vercel.app
 
 1. Install Node.js 20 or newer.
 2. Run `npm install`.
-3. Copy `.env.example` to `.env.local`.
+3. Copy the environment template using the command for your platform:
+
+   ```bash
+   # macOS, Linux, or Git Bash
+   cp .env.example .env.local
+   ```
+
+   ```powershell
+   # Windows PowerShell
+   Copy-Item .env.example .env.local
+   ```
+
 4. Create a Supabase project and add its public URL and anon key.
 5. Apply every SQL migration in `supabase/migrations` in filename order using the Supabase SQL Editor.
 6. Add `OPENAI_API_KEY` only as a server environment variable.
