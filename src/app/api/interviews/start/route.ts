@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuestions } from '@/lib/ai/openai';
+import { interviewConfigError } from '@/lib/interviews/validation.mjs';
 import { enforceRateLimit } from '@/lib/rate-limit/distributed';
 import { createClient } from '@/lib/supabase/server';
 import type { InterviewConfig } from '@/lib/interviews/types';
@@ -46,9 +47,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const config = await request.json() as InterviewConfig;
-    if (!['technical', 'behavioral', 'general'].includes(config.type) || !['written', 'voice'].includes(config.mode) || !config.jobRole?.trim() || ![5, 8, 10].includes(config.questionCount)) {
-      return NextResponse.json({ error: 'Invalid interview settings.' }, { status: 400 });
-    }
+    const validationError = interviewConfigError(config);
+    if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
 
     let questions: string[];
     let usingFallback = false;
