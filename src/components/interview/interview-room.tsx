@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { VoiceRecorder } from './voice-recorder';
 import type { AnswerFeedback, InterviewConfig } from '@/lib/interviews/types';
+import { parseStoredInterviewSession } from '@/lib/interviews/session.mjs';
 
 type Session = { id: string; questions: string[]; config: InterviewConfig; answers: Array<{ question: string; answer: string; feedback: AnswerFeedback }> };
 
@@ -11,10 +12,21 @@ export function InterviewRoom({ id }: { id: string }) {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [answer, setAnswer] = useState(''); const [loading, setLoading] = useState(false); const [error, setError] = useState(''); const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
-  useEffect(() => { const raw = sessionStorage.getItem(`interview:${id}`); if (raw) setSession(JSON.parse(raw)); }, [id]);
+  useEffect(() => {
+    const storageKey = `interview:${id}`;
+    const raw = sessionStorage.getItem(storageKey);
+    const stored = parseStoredInterviewSession(raw, id) as Session | null;
+    if (stored) setSession(stored);
+    else if (raw) sessionStorage.removeItem(storageKey);
+  }, [id]);
+  useEffect(() => {
+    if (!session || session.answers.length < session.questions.length) return;
+    sessionStorage.setItem(`interview:${id}`, JSON.stringify(session));
+    router.replace(`/interviews/${id}/results`);
+  }, [id, router, session]);
   if (!session) return <div className="card p-8 text-center"><h2 className="text-xl font-bold">Interview session not found</h2><p className="mt-2 text-slate-600">Start a new interview to continue.</p><button onClick={() => router.push('/interviews/new')} className="btn btn-primary mt-5">Create interview</button></div>;
   const index = session.answers.length; const question = session.questions[index]; const complete = index >= session.questions.length;
-  if (complete) { sessionStorage.setItem(`interview:${id}`, JSON.stringify(session)); router.replace(`/interviews/${id}/results`); return <p>Preparing your results…</p>; }
+  if (complete) return <p role="status">Preparing your results…</p>;
 
   async function submit() {
     if (answer.trim().length < 10) { setError('Please provide a more complete answer.'); return; }
