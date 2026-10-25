@@ -62,4 +62,18 @@ test('rejects malformed or impossible answer history', () => {
     ),
     null,
   );
+  assert.equal(
+    parseStoredInterviewSession(
+      JSON.stringify({
+        ...session,
+        answers: [{
+          question: 'Question?',
+          answer: 'A sufficiently complete answer.',
+          feedback: { ...feedback, followUpQuestion: 42 },
+        }],
+      }),
+      session.id,
+    ),
+    null,
+  );
 });

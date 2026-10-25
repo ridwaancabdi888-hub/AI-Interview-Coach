@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { VoiceRecorder } from './voice-recorder';
 import type { AnswerFeedback, InterviewConfig } from '@/lib/interviews/types';
+import { readInterviewFeedbackResponse } from '@/lib/interviews/api-response.mjs';
 import { parseStoredInterviewSession } from '@/lib/interviews/session.mjs';
 
 type Session = { id: string; questions: string[]; config: InterviewConfig; answers: Array<{ question: string; answer: string; feedback: AnswerFeedback }> };
@@ -31,7 +32,7 @@ export function InterviewRoom({ id }: { id: string }) {
   async function submit() {
     if (answer.trim().length < 10) { setError('Please provide a more complete answer.'); return; }
     setLoading(true); setError('');
-    try { const response = await fetch('/api/interviews/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, answer, config: session!.config }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setFeedback(data.feedback); }
+    try { const response = await fetch('/api/interviews/answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, answer, config: session!.config }) }); const data = await readInterviewFeedbackResponse(response, 'Unable to evaluate answer'); setFeedback(data.feedback as AnswerFeedback); }
     catch (e) { setError(e instanceof Error ? e.message : 'Unable to evaluate answer'); }
     finally { setLoading(false); }
   }

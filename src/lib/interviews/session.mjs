@@ -4,7 +4,7 @@ function isStringList(candidate) {
   return Array.isArray(candidate) && candidate.every((item) => typeof item === 'string' && item.trim());
 }
 
-function isFeedback(candidate) {
+export function isAnswerFeedback(candidate) {
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
   const feedback = /** @type {Record<string, unknown>} */ (candidate);
   return (
@@ -16,7 +16,8 @@ function isFeedback(candidate) {
     feedback.summary.trim().length > 0 &&
     isStringList(feedback.strengths) &&
     isStringList(feedback.improvements) &&
-    typeof feedback.improvedAnswer === 'string'
+    typeof feedback.improvedAnswer === 'string' &&
+    (feedback.followUpQuestion === undefined || typeof feedback.followUpQuestion === 'string')
   );
 }
 
@@ -47,7 +48,7 @@ export function parseStoredInterviewSession(raw, expectedId) {
         answer.question.trim().length > 0 &&
         typeof answer.answer === 'string' &&
         answer.answer.trim().length >= 10 &&
-        isFeedback(answer.feedback)
+        isAnswerFeedback(answer.feedback)
       );
     });
 

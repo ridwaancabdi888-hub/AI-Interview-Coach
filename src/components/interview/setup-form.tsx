@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { readInterviewStartResponse } from '@/lib/interviews/api-response.mjs';
 import type { InterviewConfig, InterviewMode, InterviewType } from '@/lib/interviews/types';
 
 const types: Array<{ id: InterviewType; title: string; description: string; icon: string }> = [
@@ -33,8 +34,7 @@ export function InterviewSetupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unable to start interview');
+      const data = await readInterviewStartResponse(response, 'Unable to start interview');
       sessionStorage.setItem(`interview:${data.id}`, JSON.stringify({ ...data, config, answers: [] }));
       router.push(`/interviews/${data.id}`);
     } catch (caughtError) {
