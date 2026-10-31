@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseStoredInterviewSession } from '../src/lib/interviews/session.mjs';
+import { parseCompletedInterviewSession, parseStoredInterviewSession } from '../src/lib/interviews/session.mjs';
 
 const config = {
   type: 'technical',
@@ -37,6 +37,44 @@ test('restores a valid completed answer', () => {
     answers: [{ question: session.questions[0], answer: 'I built and tested a booking platform.', feedback }],
   };
   assert.deepEqual(parseStoredInterviewSession(JSON.stringify(completed), session.id), completed);
+});
+
+test('restores a report only after every question has been answered', () => {
+  const completed = {
+    ...session,
+    answers: session.questions.map((question) => ({
+      question,
+      answer: `A complete answer for ${question}`,
+      feedback,
+    })),
+  };
+
+  assert.deepEqual(parseCompletedInterviewSession(JSON.stringify(completed), session.id), completed);
+  assert.equal(parseCompletedInterviewSession(JSON.stringify(session), session.id), null);
+  assert.equal(
+    parseCompletedInterviewSession(JSON.stringify({ ...completed, answers: completed.answers.slice(0, 1) }), session.id),
+    null,
+  );
+});
+
+test('rejects corrupt or mismatched completed-report storage', () => {
+  const completed = {
+    ...session,
+    answers: session.questions.map((question) => ({ question, answer: 'A complete and valid answer.', feedback })),
+  };
+
+  assert.equal(parseCompletedInterviewSession('{broken', session.id), null);
+  assert.equal(parseCompletedInterviewSession(JSON.stringify(completed), 'different-session'), null);
+  assert.equal(
+    parseCompletedInterviewSession(
+      JSON.stringify({
+        ...completed,
+        answers: [{ ...completed.answers[0], feedback: { ...feedback, score: 101 } }, completed.answers[1]],
+      }),
+      session.id,
+    ),
+    null,
+  );
 });
 
 test('rejects invalid JSON and a session stored under the wrong id', () => {

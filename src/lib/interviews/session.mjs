@@ -57,3 +57,18 @@ export function parseStoredInterviewSession(raw, expectedId) {
     return null;
   }
 }
+
+/**
+ * Restore a session only when every interview question has a valid answer.
+ *
+ * @param {string | null} raw
+ * @param {string} expectedId
+ * @returns {unknown | null}
+ */
+export function parseCompletedInterviewSession(raw, expectedId) {
+  const candidate = parseStoredInterviewSession(raw, expectedId);
+  if (!candidate) return null;
+
+  const session = /** @type {{ questions: unknown[]; answers: unknown[] }} */ (candidate);
+  return session.answers.length > 0 && session.answers.length === session.questions.length ? candidate : null;
+}
