@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCompletedInterviewSession, parseStoredInterviewSession } from '../src/lib/interviews/session.mjs';
+import { parseCompletedInterviewSession, parseStoredAnswerDraft, parseStoredInterviewSession } from '../src/lib/interviews/session.mjs';
 
 const config = {
   type: 'technical',
@@ -114,4 +114,25 @@ test('rejects malformed or impossible answer history', () => {
     ),
     null,
   );
+});
+
+test('restores an unsaved answer draft for the current question', () => {
+  const raw = JSON.stringify({ index: 1, answer: 'Half-written answer' });
+  assert.deepEqual(parseStoredAnswerDraft(raw, 1), { answer: 'Half-written answer', feedback: null });
+});
+
+test('restores a draft together with feedback already received for it', () => {
+  const raw = JSON.stringify({ index: 0, answer: 'I built and tested a booking platform.', feedback });
+  assert.deepEqual(parseStoredAnswerDraft(raw, 0), { answer: 'I built and tested a booking platform.', feedback });
+});
+
+test('ignores drafts for another question, empty drafts, and corrupt storage', () => {
+  assert.equal(parseStoredAnswerDraft(JSON.stringify({ index: 0, answer: 'Old answer text' }), 1), null);
+  assert.equal(parseStoredAnswerDraft(JSON.stringify({ index: 0, answer: '   ' }), 0), null);
+  assert.equal(parseStoredAnswerDraft(JSON.stringify({ index: 0, answer: 'x'.repeat(8001) }), 0), null);
+  assert.equal(parseStoredAnswerDraft(JSON.stringify({ index: 0, answer: 'Valid answer text', feedback: { score: 'high' } }), 0), null);
+  assert.equal(parseStoredAnswerDraft(JSON.stringify({ index: 0, answer: 'short', feedback }), 0), null);
+  assert.equal(parseStoredAnswerDraft('{not json', 0), null);
+  assert.equal(parseStoredAnswerDraft(JSON.stringify(['array']), 0), null);
+  assert.equal(parseStoredAnswerDraft(null, 0), null);
 });
