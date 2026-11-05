@@ -72,3 +72,42 @@ export function parseCompletedInterviewSession(raw, expectedId) {
   const session = /** @type {{ questions: unknown[]; answers: unknown[] }} */ (candidate);
   return session.answers.length > 0 && session.answers.length === session.questions.length ? candidate : null;
 }
+
+/**
+ * Storage key for the in-progress (not yet submitted to the session) answer.
+ *
+ * @param {string} id
+ */
+export function answerDraftStorageKey(id) {
+  return `interview:${id}:draft`;
+}
+
+/**
+ * Safely restore an unsaved answer draft (and any feedback already received
+ * for it) so a refresh or accidental navigation does not lose the user's work.
+ * The draft is only returned when it belongs to the question currently shown.
+ *
+ * @param {string | null} raw
+ * @param {number} expectedIndex
+ * @returns {{ answer: string; feedback: unknown | null } | null}
+ */
+export function parseStoredAnswerDraft(raw, expectedIndex) {
+  if (!raw) return null;
+
+  try {
+    const candidate = JSON.parse(raw);
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return null;
+
+    const draft = /** @type {Record<string, unknown>} */ (candidate);
+    if (draft.index !== expectedIndex || typeof draft.answer !== 'string' || draft.answer.length > 8000) return null;
+
+    if (draft.feedback === undefined || draft.feedback === null) {
+      return draft.answer.trim() ? { answer: draft.answer, feedback: null } : null;
+    }
+
+    if (!isAnswerFeedback(draft.feedback) || draft.answer.trim().length < 10) return null;
+    return { answer: draft.answer, feedback: draft.feedback };
+  } catch {
+    return null;
+  }
+}
