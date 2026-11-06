@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { parseCompletedInterviewSession } from '@/lib/interviews/session.mjs';
+import { loadInterviewSession } from '@/lib/interviews/session.mjs';
 import type { AnswerFeedback, InterviewConfig } from '@/lib/interviews/types';
 
 type Session = { id: string; config: InterviewConfig; answers: Array<{ question: string; answer: string; feedback: AnswerFeedback }> };
@@ -11,10 +11,8 @@ export function ResultsReport({ id }: { id: string }) {
   const [session, setSession] = useState<Session | null>(null);
   useEffect(() => {
     const storageKey = `interview:${id}`;
-    const raw = sessionStorage.getItem(storageKey);
-    const stored = parseCompletedInterviewSession(raw, id) as Session | null;
+    const stored = loadInterviewSession(sessionStorage, storageKey, id, { completed: true }) as Session | null;
     if (stored) setSession(stored);
-    else if (raw) sessionStorage.removeItem(storageKey);
   }, [id]);
   const metrics = useMemo(() => { if (!session?.answers.length) return null; const score = Math.round(session.answers.reduce((sum, item) => sum + item.feedback.score, 0) / session.answers.length); const strengths = [...new Set(session.answers.flatMap((item) => item.feedback.strengths))].slice(0, 5); const improvements = [...new Set(session.answers.flatMap((item) => item.feedback.improvements))].slice(0, 5); return { score, strengths, improvements }; }, [session]);
   if (!session || !metrics) return <div className="card p-8 text-center"><h2 className="text-xl font-bold">No completed interview found</h2><Link className="btn btn-primary mt-5" href="/interviews/new">Start interview</Link></div>;

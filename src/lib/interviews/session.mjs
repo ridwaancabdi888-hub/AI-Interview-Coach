@@ -72,3 +72,56 @@ export function parseCompletedInterviewSession(raw, expectedId) {
   const session = /** @type {{ questions: unknown[]; answers: unknown[] }} */ (candidate);
   return session.answers.length > 0 && session.answers.length === session.questions.length ? candidate : null;
 }
+
+/**
+ * Read and validate a session without letting blocked browser storage crash
+ * the interview UI. Invalid entries are removed on a best-effort basis.
+ *
+ * @param {Storage} storage
+ * @param {string} storageKey
+ * @param {string} expectedId
+ * @param {{ completed?: boolean }} [options]
+ * @returns {unknown | null}
+ */
+export function loadInterviewSession(storage, storageKey, expectedId, { completed = false } = {}) {
+  let raw;
+  try {
+    raw = storage.getItem(storageKey);
+  } catch {
+    return null;
+  }
+
+  const session = completed
+    ? parseCompletedInterviewSession(raw, expectedId)
+    : parseStoredInterviewSession(raw, expectedId);
+
+  if (!session && raw) {
+    try {
+      storage.removeItem(storageKey);
+    } catch {
+      // Storage cleanup is optional; the invalid value remains unusable.
+    }
+  }
+
+  return session;
+}
+
+/**
+ * Persist a session and report failure so the UI can keep the current answer
+ * visible instead of navigating away or crashing.
+ *
+ * @param {Storage} storage
+ * @param {string} storageKey
+ * @param {unknown} session
+ * @returns {boolean}
+ */
+export function saveInterviewSession(storage, storageKey, session) {
+  try {
+    const serialized = JSON.stringify(session);
+    if (typeof serialized !== 'string') return false;
+    storage.setItem(storageKey, serialized);
+    return true;
+  } catch {
+    return false;
+  }
+}

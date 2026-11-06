@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { readInterviewStartResponse } from '@/lib/interviews/api-response.mjs';
+import { saveInterviewSession } from '@/lib/interviews/session.mjs';
 import type { InterviewConfig, InterviewMode, InterviewType } from '@/lib/interviews/types';
 
 const types: Array<{ id: InterviewType; title: string; description: string; icon: string }> = [
@@ -35,7 +36,14 @@ export function InterviewSetupForm() {
         body: JSON.stringify(config),
       });
       const data = await readInterviewStartResponse(response, 'Unable to start interview');
-      sessionStorage.setItem(`interview:${data.id}`, JSON.stringify({ ...data, config, answers: [] }));
+      const saved = saveInterviewSession(
+        sessionStorage,
+        `interview:${data.id}`,
+        { ...data, config, answers: [] },
+      );
+      if (!saved) {
+        throw new Error('Your browser could not save this interview. Free some storage or allow site data, then try again.');
+      }
       router.push(`/interviews/${data.id}`);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Something went wrong');

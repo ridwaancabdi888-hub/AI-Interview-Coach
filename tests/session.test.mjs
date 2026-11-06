@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCompletedInterviewSession, parseStoredInterviewSession } from '../src/lib/interviews/session.mjs';
+import {
+  loadInterviewSession,
+  parseCompletedInterviewSession,
+  parseStoredInterviewSession,
+  saveInterviewSession,
+} from '../src/lib/interviews/session.mjs';
 
 const config = {
   type: 'technical',
@@ -113,5 +118,52 @@ test('rejects malformed or impossible answer history', () => {
       session.id,
     ),
     null,
+  );
+});
+
+test('saves and loads a validated interview through browser storage', () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  };
+
+  assert.equal(saveInterviewSession(storage, 'interview:session-123', session), true);
+  assert.deepEqual(loadInterviewSession(storage, 'interview:session-123', session.id), session);
+});
+
+test('reports blocked or unserializable session writes without throwing', () => {
+  const blockedStorage = { setItem: () => { throw new Error('Quota exceeded'); } };
+  const circular = {};
+  circular.self = circular;
+
+  assert.equal(saveInterviewSession(blockedStorage, 'interview:blocked', session), false);
+  assert.equal(saveInterviewSession({ setItem: () => {} }, 'interview:circular', circular), false);
+});
+
+test('handles blocked reads and best-effort cleanup of invalid sessions', () => {
+  const blockedStorage = { getItem: () => { throw new Error('Storage blocked'); } };
+  let removalAttempts = 0;
+  const invalidStorage = {
+    getItem: () => '{broken',
+    removeItem: () => { removalAttempts += 1; throw new Error('Cleanup blocked'); },
+  };
+
+  assert.equal(loadInterviewSession(blockedStorage, 'interview:blocked', session.id), null);
+  assert.equal(loadInterviewSession(invalidStorage, 'interview:broken', session.id), null);
+  assert.equal(removalAttempts, 1);
+});
+
+test('loads completed sessions only when every answer is present', () => {
+  const completed = {
+    ...session,
+    answers: session.questions.map((question) => ({ question, answer: 'A complete and valid answer.', feedback })),
+  };
+  const storage = { getItem: () => JSON.stringify(completed) };
+
+  assert.deepEqual(
+    loadInterviewSession(storage, 'interview:session-123', session.id, { completed: true }),
+    completed,
   );
 });

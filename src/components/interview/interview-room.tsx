@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { VoiceRecorder } from './voice-recorder';
 import type { AnswerFeedback, InterviewConfig } from '@/lib/interviews/types';
 import { readInterviewFeedbackResponse } from '@/lib/interviews/api-response.mjs';
-import { parseStoredInterviewSession } from '@/lib/interviews/session.mjs';
+import { loadInterviewSession, saveInterviewSession } from '@/lib/interviews/session.mjs';
 
 type Session = { id: string; questions: string[]; config: InterviewConfig; answers: Array<{ question: string; answer: string; feedback: AnswerFeedback }> };
 
@@ -15,14 +15,11 @@ export function InterviewRoom({ id }: { id: string }) {
   const [answer, setAnswer] = useState(''); const [loading, setLoading] = useState(false); const [error, setError] = useState(''); const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   useEffect(() => {
     const storageKey = `interview:${id}`;
-    const raw = sessionStorage.getItem(storageKey);
-    const stored = parseStoredInterviewSession(raw, id) as Session | null;
+    const stored = loadInterviewSession(sessionStorage, storageKey, id) as Session | null;
     if (stored) setSession(stored);
-    else if (raw) sessionStorage.removeItem(storageKey);
   }, [id]);
   useEffect(() => {
     if (!session || session.answers.length < session.questions.length) return;
-    sessionStorage.setItem(`interview:${id}`, JSON.stringify(session));
     router.replace(`/interviews/${id}/results`);
   }, [id, router, session]);
   if (!session) return <div className="card p-8 text-center"><h2 className="text-xl font-bold">Interview session not found</h2><p className="mt-2 text-slate-600">Start a new interview to continue.</p><button onClick={() => router.push('/interviews/new')} className="btn btn-primary mt-5">Create interview</button></div>;
@@ -36,7 +33,18 @@ export function InterviewRoom({ id }: { id: string }) {
     catch (e) { setError(e instanceof Error ? e.message : 'Unable to evaluate answer'); }
     finally { setLoading(false); }
   }
-  function next() { if (!feedback) return; const updated = { ...session!, answers: [...session!.answers, { question, answer, feedback }] }; sessionStorage.setItem(`interview:${id}`, JSON.stringify(updated)); setSession(updated); setAnswer(''); setFeedback(null); }
+  function next() {
+    if (!feedback) return;
+    const updated = { ...session!, answers: [...session!.answers, { question, answer, feedback }] };
+    if (!saveInterviewSession(sessionStorage, `interview:${id}`, updated)) {
+      setError('Your browser could not save this answer. Free some storage or allow site data, then try again.');
+      return;
+    }
+    setError('');
+    setSession(updated);
+    setAnswer('');
+    setFeedback(null);
+  }
 
   return <div className="mx-auto max-w-4xl"><div className="mb-6 flex items-center justify-between gap-4"><div><span className="badge capitalize">{session.config.type} · {session.config.mode}</span><p className="mt-3 text-sm font-semibold text-slate-500">Question {index + 1} of {session.questions.length}</p></div><div className="h-2 w-40 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-indigo-600" style={{ width: `${(index / session.questions.length) * 100}%` }} /></div></div>
     <section className="card shadow-soft p-6 md:p-9"><h1 className="text-2xl font-extrabold leading-snug md:text-3xl">{question}</h1>{session.config.mode === 'voice' && <div className="mt-6"><VoiceRecorder value={answer} onChange={setAnswer} /></div>}<label className="mt-6 block text-sm font-semibold">Your answer<textarea value={answer} onChange={(e) => setAnswer(e.target.value)} className="input mt-2 min-h-56 resize-y" placeholder="Use a clear structure, specific actions, and measurable outcomes." maxLength={8000} /></label><div className="mt-2 text-right text-xs text-slate-500">{answer.length}/8000</div>{error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}{!feedback && <button onClick={submit} disabled={loading} className="btn btn-primary mt-5">{loading ? 'Analyzing answer…' : 'Submit answer'}</button>}
